@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t rdubey/react-test -f ./client/Dockerfile.dev ./client
+
+scripts:
+  - docker run -e CI=true rdubey/react-test npm run test -- --c
+
+after_success:
+  - docker build -t rdubey/multi-client ./client
+  - docker build -t rdubey/multi-nginx ./nginx
+  - docker build -t rdubey/multi-server ./server
+  - docker build -t rdubey/multi-worker ./worker
+  # Login to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push to docker hub
+  - docker push rdubey/multi-client
+  - docker push rdubey/multi-nginx
+  - docker push rdubey/multi-server
+  - docker push rdubey/multi-worker
