@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t rdubey/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run rdubey/react-test npm test -- --c
+
+after_success:
+  - docker build -t rdubey/multi-client ./client
+  - docker build -t rdubey/multi-server ./server
+  - docker build -t rdubey/multi-nginx ./nginx
+  - docker build -t rdubey/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push rdubey/multi-client
+  - docker push rdubey/multi-server
+  - docker push rdubey/multi-nginx
+  - docker push rdubey/multi-worker
